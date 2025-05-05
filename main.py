@@ -103,6 +103,7 @@ df_users = pd.read_csv(
 df_users_original = df_users.copy()
 
 # Processamento avançado de usuários
+df_users['value'] = pd.to_numeric(df_users['value'], errors='coerce')
 df_users['clean_game'] = df_users['game'].apply(clean_name)
 df_users = df_users.query("action == 'play' and value >= 0").copy()
 
@@ -132,30 +133,33 @@ df_users.rename(columns={'value': 'playtime_hours'}, inplace=True)
 # 3. ANÁLISE EXPLORATÓRIA INTEGRADA
 # ==============================================
 
-def plot_feature_distribution(df: pd.DataFrame, column: str, log_scale: bool = False):
-    """Visualização comparativa de distribuições antes/depois do tratamento"""
+def plot_feature_distribution(original_data: pd.Series, treated_data: pd.Series, column_name: str, log_scale: bool = False):
+    """
+    Visualização comparativa de distribuições antes/depois do tratamento
+    """
     plt.figure(figsize=(12, 5))
     
     plt.subplot(1, 2, 1)
-    sns.histplot(df[column], kde=True)
-    plt.title(f'Distribuição Original - {column}')
+    sns.histplot(original_data, kde=True)
+    plt.title(f'Distribuição Original - {column_name}')
     if log_scale:
         plt.yscale('log')
     
     plt.subplot(1, 2, 2)
-    sns.histplot(df[column], kde=True)
-    plt.title(f'Distribuição Tratada - {column}')
+    sns.histplot(treated_data, kde=True)
+    plt.title(f'Distribuição Tratada - {column_name}')
     if log_scale:
         plt.yscale('log')
     
     plt.tight_layout()
-    plt.show()
+    plt.savefig(f'./graph/distribuicao_{column_name}.png')
+    plt.close()
 
 # Análise de preços
-plot_feature_distribution(df_games, 'price', log_scale=True)
+plot_feature_distribution(df_games_original['price'], df_games['price'], 'price', log_scale=True)
 
 # Análise de playtime
-plot_feature_distribution(df_users, 'playtime_hours', log_scale=True)
+plot_feature_distribution(df_users_original['value'], df_users['playtime_hours'], 'playtime_hours', log_scale=True)
 
 # ==============================================
 # 4. MERGE E FEATURE ENGINEERING
@@ -191,7 +195,8 @@ def plot_correlation_matrix(df: pd.DataFrame, columns: list):
     corr = df[columns].corr()
     sns.heatmap(corr, annot=True, cmap='coolwarm', fmt=".2f")
     plt.title('Matriz de Correlação')
-    plt.show()
+    plt.savefig('./graph/matriz_correlacao.png')
+    plt.close()
 
 # Selecionar features numéricas para análise
 numeric_features = [
@@ -228,7 +233,8 @@ def plot_temporal_trends(df: pd.DataFrame):
     plt.ylabel('Preço Médio (USD)')
     
     plt.tight_layout()
-    plt.show()
+    plt.savefig('./graph/tendencias_temporais.png')
+    plt.close()
 
 plot_temporal_trends(df_games)
 
