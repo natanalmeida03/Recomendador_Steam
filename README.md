@@ -2,6 +2,16 @@
 
 ## Como executar
 
+clone o repositorio
+
+```bash
+git clone https://github.com/natanalmeida03/Recomendador_Steam.git
+```
+
+Entre na pasta
+```bash
+cd Recomendador_Steam
+```
 crie um ambiente virtual
 
 ```bash
