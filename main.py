@@ -245,8 +245,8 @@ plot_temporal_trends(df_games)
 # Selecionar colunas relevantes
 final_columns = [
     'user_id', 'clean_game', 'playtime_hours', 'price',
-    'genres', 'steamspy_tags', 'release_year', 'user_engagement',
-    'price_per_hour', 'playtime_norm', 'price_norm'
+    'genres', 'steamspy_tags', 'release_year', 'positive_ratings', 'negative_ratings',
+    'user_engagement', 'price_per_hour', 'playtime_norm', 'price_norm'
 ]
 
 # Exportar dataset final
