@@ -31,8 +31,8 @@ Instale as dependências
 ```bash
 pip install -r requirements.txt
 ```
-Execute o arquivo recomender.py
+Execute o arquivo front
 
 ```bash
-python recomender.py
+streamlit run front.py
 ```
