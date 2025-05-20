@@ -3,86 +3,93 @@ import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics.pairwise import cosine_similarity
-from scipy.sparse import hstack
+from scipy.sparse import hstack, csr_matrix
+from rich.console import Console
+from rich.table import Table
+import warnings
+warnings.filterwarnings("ignore")
 
 # ======================
-# Pré-processamento
+# Carregamento e Preparo
 # ======================
 
-# Carregando o dataset
-df = pd.read_csv('./data/steam_project.csv')
+# Carregar dataset
+df = pd.read_csv('./data/steam_enhanced.csv')
 
 # Remover duplicatas
-df = df.groupby('clean_game').first().reset_index()
+df = df.drop_duplicates(subset='clean_game', keep='first').reset_index(drop=True)
 
 # Preencher nulos
-text_cols = ['categories', 'genres', 'steamspy_tags']
+num_cols = ['price', 'user_engagement', 'price_per_hour', 'playtime_norm', 'price_norm']
+df[num_cols] = df[num_cols].apply(pd.to_numeric, errors='coerce').fillna(df[num_cols].median())
+text_cols = ['genres', 'steamspy_tags']
 df[text_cols] = df[text_cols].fillna('')
-num_cols = ['required_age', 'achievements', 'positive_ratings', 'negative_ratings', 'average_playtime', 'price']
-for col in num_cols:
-    df[col] = pd.to_numeric(df[col], errors='coerce').fillna(df[col].median())
 
-# Criar coluna unificada de texto
-df['text_features'] = df['categories'] + ' ' + df['genres'] + ' ' + df['steamspy_tags']
+# Combinar colunas textuais
+df['text_features'] = df['genres'] + ' ' + df['steamspy_tags']
 
-# Vetorização TF-IDF
-tfidf = TfidfVectorizer(max_features=5000)
+# TF-IDF com n-gramas
+tfidf = TfidfVectorizer(max_features=8000, ngram_range=(1, 2))
 tfidf_matrix = tfidf.fit_transform(df['text_features'])
 
-# Normalização das features numéricas
+# Normalizar colunas numéricas
 scaler = MinMaxScaler()
 num_matrix = scaler.fit_transform(df[num_cols])
+num_matrix_sparse = csr_matrix(num_matrix)
 
-# Combinar TF-IDF + Numéricas
-game_features = hstack([tfidf_matrix, num_matrix])
+# Combinar todas as features
+game_features = hstack([tfidf_matrix, num_matrix_sparse])
 
 # ======================
-# Função de recomendação
+# Função de Recomendação
 # ======================
 
-def recomendar_jogos(jogo_nome, top_n=5):
-    jogo_nome = jogo_nome.strip().lower()
-    matches = df[df['clean_game'].str.lower() == jogo_nome]
+def recomendar_jogos(nome_jogo, top_n=5):
+    nome_jogo = nome_jogo.lower()
+    if nome_jogo not in df['clean_game'].values:
+        print(f"\n❌ Jogo '{nome_jogo}' não encontrado.")
+        similares = df[df['clean_game'].str.contains(nome_jogo, na=False)]['clean_game'].tolist()
+        if similares:
+            print("🔍 Você quis dizer:")
+            for s in similares[:5]:
+                print(f" - {s}")
+        return pd.DataFrame()
 
-    if matches.empty:
-        print(f"\n❌ Jogo '{jogo_nome}' não encontrado.\n")
-        return []
-
-    idx = matches.index[0]
-    jogo_vector = game_features.getrow(idx)
-
+    idx = df[df['clean_game'] == nome_jogo].index[0]
+    jogo_vector = game_features[idx]
     similarity = cosine_similarity(jogo_vector, game_features).flatten()
+
     similar_indices = similarity.argsort()[::-1]
+    similar_indices = [i for i in similar_indices if i != idx][:top_n]
 
-    # Excluir o próprio jogo e selecionar top_n
-    recommendations = [i for i in similar_indices if i != idx][:top_n]
-    return df.iloc[recommendations][['clean_game', 'genres', 'price']]
+    return df.iloc[similar_indices][['clean_game', 'genres', 'price']]
 
-from rich.table import Table
-from rich.console import Console
+# ======================
+# Interface com Rich
+# ======================
 
-def exibir_recomendacoes(resultados):
+def exibir_recomendacoes(recomendados):
     console = Console()
-    table = Table(title="Recomendações de Jogos")
+    table = Table(title="🎮 Recomendação de Jogos Steam")
 
-    table.add_column("Nome", justify="left", style="cyan", no_wrap=True)
-    table.add_column("Gêneros", justify="left", style="magenta")
-    table.add_column("Preço (USD)", justify="center", style="green")
+    table.add_column("Nome", style="cyan", no_wrap=True)
+    table.add_column("Gêneros", style="magenta")
+    table.add_column("Preço", justify="center", style="green")
 
-    for _, row in resultados.iterrows():
-        table.add_row(str(row['clean_game']), str(row['genres']), f"${row['price']:.2f}")
+    for _, row in recomendados.iterrows():
+        table.add_row(str(row['clean_game']), row['genres'], f"${row['price']:.2f}")
 
     console.print(table)
 
-
 # ======================
-# Executar
+# Execução
 # ======================
 
 if __name__ == "__main__":
-    entrada = input("Digite o nome do jogo: ").lower().strip()
-    resultados = recomendar_jogos(entrada)
-    if not resultados.empty:
-        exibir_recomendacoes(resultados)
+    nome = input("Digite o nome de um jogo: ").strip().lower()
+    recomendados = recomendar_jogos(nome)
+    
+    if not recomendados.empty:
+        exibir_recomendacoes(recomendados)
     else:
-        print("Nenhuma recomendação encontrada.")
+        print("\nNenhuma recomendação pôde ser exibida.")
