@@ -6,6 +6,8 @@ Este sistema foi modelado durante e disciplina de `Aprendizado de Máquina` da U
 
 Sistema inteligente de recomendação de jogos da Steam utilizando técnicas de **NLP (TF-IDF + Cosine Similarity)** combinadas com **aprendizado supervisionado (Random Forest)** para prever jogos com maior chance de agradar ao usuário.
 
+[Acesse online](https://recomendador-steam-cam.streamlit.app/)
+
 ## Funcionalidades
 
 - **Busca de Jogos:** Digite parte do nome de um jogo e receba recomendações personalizadas.
