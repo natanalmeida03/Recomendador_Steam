@@ -287,8 +287,8 @@ if submit and search_text.strip():
                     generos_html = ''.join([f'<span class="genres-tag">{g.strip()}</span>' for g in generos_list if g.strip()])
 
                     preco = f"${jogo['price']:.2f}"
-                    probabilidade = min(max(jogo['rf_prob'], 0.0), 0.9999)
-                    prob_formatada = f"{probabilidade * 100:.2f}%"
+                    probabilidade = jogo['predicted_engagement_norm']
+                    prob_formatada = f"{probabilidade:.2f}%"
 
                     card_full_html = f"""
                     <div class="game-card">
