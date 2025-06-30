@@ -4,17 +4,37 @@ Este sistema foi modelado durante e disciplina de `Aprendizado de Máquina` da U
 
 [Repositório da disciplina](https://github.com/sergioaafreitas/CAM)
 
-Sistema inteligente de recomendação de jogos da Steam utilizando técnicas de **NLP (TF-IDF + Cosine Similarity)** combinadas com **aprendizado supervisionado (Random Forest)** para prever jogos com maior chance de agradar ao usuário.
+Este projeto implementa um sistema de recomendação de jogos para a plataforma Steam, utilizando uma abordagem híbrida que combina similaridade de conteúdo (TF-IDF + Similaridade de Cosseno), agrupamento de jogos (K-Means) e um modelo de Machine Learning (Random Forest Regressor) para prever o engajamento do usuário.
 
 [Acesse online](https://recomendador-steam-cam.streamlit.app/)
 
-## Funcionalidades
+## Arquitetura do Sistema
 
-- **Busca de Jogos:** Digite parte do nome de um jogo e receba recomendações personalizadas.
-- **TF-IDF + Cosine Similarity:** Análise semântica baseada em gêneros, categorias e tags dos jogos.
-- **Random Forest:** Modelo supervisionado que estima a probabilidade de o usuário gostar do jogo.
-- **Interface Interativa:** Visualização em grade com informações organizadas via **Streamlit**.
-- **Gráficos e Métricas:** Avaliação de modelos de regressão, classificação e clusterização com métricas como R², MAE, F1 Score e Silhouette Score.
+O sistema é composto por três módulos principais:
+
+1.  **`recommender.py`**: Este é o coração do sistema de recomendação. Ele é responsável por:
+    * Carregar e pré-processar os dados de jogos Steam.
+    * Gerar representações textuais (gêneros, tags) usando TF-IDF.
+    * Realizar o agrupamento de jogos (K-Means) com base em suas características numéricas (`price`, `user_engagement`, `price_per_hour`, `playtime_norm`, `price_norm`). Cada jogo é associado a um cluster.
+    * Construir uma matriz combinada de features textuais e numéricas para calcular a similaridade de cosseno.
+    * Treinar o modelo `RandomForestRegressor` para prever o `user_engagement` (engajamento do usuário), utilizando as características do jogo e o cluster ao qual ele pertence como features preditoras.
+    * A função `recomendar_jogos` recebe um nome de jogo, encontra jogos similares usando TF-IDF + Similaridade de Cosseno, refina essa lista aplicando o modelo de regressão para prever o engajamento de cada jogo candidato, e retorna as recomendações ranqueadas pelo engajamento predito.
+
+2.  **`model.py` (ou `random_forest.py`)**: Este script é dedicado ao ajuste fino (tuning) do modelo `RandomForestRegressor`. Ele realiza:
+    * Carga e pré-processamento de dados de forma consistente com `recommender.py`.
+    * Treinamento do K-Means para atribuir clusters aos jogos.
+    * Definição da variável alvo para regressão: `user_engagement` (aplicando `log1p` para tratar assimetria).
+    * Utilização de `GridSearchCV` para encontrar os melhores hiperparâmetros para o `RandomForestRegressor`, usando métricas de regressão como RMSE e R2 Score.
+    * As features usadas para o Random Forest incluem `price`, `price_per_hour`, `playtime_norm`, `price_norm` e o `game_cluster`.
+
+3.  **`front.py`**: Este arquivo é a interface do usuário do sistema de recomendação. Ele:
+    * Recebe a entrada do usuário (nome do jogo).
+    * Chama a função `recomendar_jogos` de `recommender.py`.
+    * Formata e exibe as recomendações em um formato HTML, incluindo o nome do jogo, gêneros, preço e o **Engajamento Predito (Probabilidade de Interesse)** (normalizado para uma escala de 0-100%).
+
+## Por que usar log no Random Forest?
+
+Variáveis como `user_engagement` ou `playtime_hours` frequentemente exibem uma distribuição altamente assimétrica à direita, com muitos jogos tendo engajamento baixo e uma cauda longa de poucos jogos com engajamento extremamente alto (outliers)
 
 ## Tecnologias Utilizadas
 
@@ -25,21 +45,6 @@ Sistema inteligente de recomendação de jogos da Steam utilizando técnicas de 
 - **Random Forest Classifier**
 - **KMeans + PCA**
 - **Streamlit** (interface gráfica)
-
-## Lógica da Recomendação
-
-1. Pré-processamento dos dados:
-   - Combinação de `genres` e `tags` em um campo textual.
-   - Aplicação de TF-IDF com bigramas.
-   - Normalização de features numéricas.
-
-2. Cálculo da similaridade:
-   - Cálculo da distância do jogo consultado com os demais.
-   - Ordenação dos jogos por **Cosine Similarity**.
-
-3. Previsão de interesse:
-   - Utilização do modelo **Random Forest** treinado com `playtime_hours > 10` como variável alvo.
-   - Cada jogo recomendado traz sua **probabilidade estimada** de agradar ao jogador.
 
 ## Interface Gráfica
 
