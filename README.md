@@ -64,6 +64,22 @@ A interface é construída com **Streamlit**, exibindo:
 | Clusterização  | KMeans com PCA                                | Silhouette 0.55  |
 | Recomendação   | TF-IDF + Cosine Similarity + Random Forest    | Relevância Visual|
 
+## Estrutura de Arquivos
+
+```
+Recomendador_Steam/
+|
+|-- data/   # Dataset utilizados para análise e treinamento
+|-- metrics/ # Métricas extraídas dos modelos iniciais
+|-- old_models/ # Codificação dos antigos modelos e modelos testes para o sistema
+|-- tuning/ # Codificação com hiperparâmetros para antigos modelos do sistema 
+|-- front.py # Arquivo da aplicação web, onde é utilizado o streamlit
+|-- model.py # Arquivo com os testes para melhores parâmetros do RandomForest e Kmeans
+|-- recommender.py # Arquivo de codificação dos modelos utilizados atualmente (Kmeans e RandomForest) e recomendação por TF-IDF + consine similarity
+|-- requiriments.txt # Arquivos com as dependências do projeto
+|-- README.md # Este arquivo
+```
+
 ## Como executar
 
 clone o repositorio
