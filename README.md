@@ -118,6 +118,7 @@ streamlit run front.py
 
 ## Melhorias Futuras
 
-- [x] Adicionar Random Forest na previsão dos jogos 
+- [x] Adicionar Random Forest na ~previsão dos jogos~ (engajamento)
+- [x] Adicionar Kmeans na categorização
 - [ ] Integração com API pública da Steam
 - [ ] Avaliação por feedback do usuário (Reinforcement Learning)
