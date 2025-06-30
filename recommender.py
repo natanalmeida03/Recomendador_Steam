@@ -65,10 +65,10 @@ num_matrix_sparse = csr_matrix(num_matrix)
 final_matrix = hstack([tfidf_matrix, num_matrix_sparse])
 
 # ======================
-# Treinar modelo Random Forest para REGRESSÃO
+# Treinar modelo Random Forest para Regressão
 # ======================
 # Variável alvo agora é numérica (log-transformada)
-df_agg['target_regression'] = np.log1p(df_agg['user_engagement']) # MUDANÇA AQUI
+df_agg['target_regression'] = np.log1p(df_agg['user_engagement']) 
 
 # Features para o Random Forest
 num_cols_for_rf = ['price', 'price_per_hour', 'playtime_norm', 'price_norm', 'game_cluster']
